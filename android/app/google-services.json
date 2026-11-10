@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "809879136558",
+    "project_id": "intheknow-d74de",
+    "storage_bucket": "intheknow-d74de.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:809879136558:android:17a8143a2739fa9fdaf2bf",
+        "android_client_info": {
+          "package_name": "com.example.in_the_know"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCm891fF1Yy1nCVHWPiKcLZI7iJhWZF1Ng"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
