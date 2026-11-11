@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'screens/loading_page.dart';
 import 'screens/login_page.dart';
+import 'screens/home_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,20 +64,7 @@ class _AuthGateState extends State<AuthGate> {
         }
 
         if (snapshot.hasData) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('Campus Events'),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.logout),
-                  onPressed: () => FirebaseAuth.instance.signOut(),
-                ),
-              ],
-            ),
-            body: Center(
-              child: Text('Welcome, ${snapshot.data?.email}!'),
-            ),
-          );
+          return const HomePage();
         }
 
         return const LoginPage();

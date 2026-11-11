@@ -87,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
               Image.asset(
                 'assets/images/itk_logo.png',
                 height: 60,
-                errorBuilder: (_, __, ___) => const Text(
+                errorBuilder: (_, _, _) => const Text(
                   'iTK',
                   style: TextStyle(
                     fontSize: 36,
@@ -104,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                   'assets/images/campus_banner.png',
                   width: 250,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     height: 180,
                     width: 250,
                     color: Colors.green.shade50,
@@ -187,7 +187,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _yellow,
-                      disabledBackgroundColor: _yellow.withOpacity(0.6),
+                      disabledBackgroundColor: _yellow.withValues(alpha: 0.6),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),

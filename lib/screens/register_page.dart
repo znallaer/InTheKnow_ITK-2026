@@ -119,7 +119,7 @@ class _RegisterPageState extends State<RegisterPage> {
               Image.asset(
                 'assets/images/itk_logo.png',
                 height: 60,
-                errorBuilder: (_, __, ___) => const Text(
+                errorBuilder: (_, _, _) => const Text(
                   'iTK',
                   style: TextStyle(
                     fontSize: 36,
@@ -137,7 +137,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   'assets/images/campus_banner.png',
                   width: 250,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     height: 180,
                     width: 250,
                     color: Colors.green.shade50,
@@ -200,7 +200,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   const SizedBox(width: 36),
                   Expanded(
                     child: DropdownButtonFormField<String>(
-                      value: _selectedRole,
+                      initialValue: _selectedRole,
                       isExpanded: true,
                       icon: _chevron(),
                       dropdownColor: Colors.white,
@@ -308,7 +308,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _yellow,
-                      disabledBackgroundColor: _yellow.withOpacity(0.6),
+                      disabledBackgroundColor: _yellow.withValues(alpha: 0.6),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),

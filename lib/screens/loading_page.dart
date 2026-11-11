@@ -12,7 +12,6 @@ class LoadingPage extends StatelessWidget {
   });
 
   static const Color _dark = Color(0xFF23282D);
-  static const Color _borderGreen = Color(0xFF16A34A);
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +26,7 @@ class LoadingPage extends StatelessWidget {
               Image.asset(
                 'assets/images/itk_logo.png',
                 width: 180,
-                errorBuilder: (_, __, ___) => const Column(
+                errorBuilder: (_, _, _) => const Column(
                   children: [
                     Icon(Icons.lightbulb, size: 72, color: Color(0xFFFAB800)),
                     Text(
