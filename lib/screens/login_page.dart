@@ -17,11 +17,10 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   bool _loading = false;
 
-  // Colors taken from the design
-  static const Color _borderGreen = Color(0xFF16A34A); // border, eye icon, "Register"
-  static const Color _labelGreen = Color(0xFF0F7B3F); // "Email" / "Password" text
-  static const Color _yellow = Color(0xFFFAB800); // Login button
-  static const Color _darkText = Color(0xFF0B1220); // headings / body text
+  static const Color _borderGreen = Color(0xFF16A34A);
+  static const Color _labelGreen = Color(0xFF0F7B3F);
+  static const Color _yellow = Color(0xFFFAB800);
+  static const Color _darkText = Color(0xFF0B1220);
 
   @override
   void dispose() {
@@ -83,7 +82,6 @@ class _LoginPageState extends State<LoginPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 24),
-
               Image.asset(
                 'assets/images/itk_logo.png',
                 height: 60,
@@ -96,9 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
               Center(
                 child: Image.asset(
                   'assets/images/campus_banner.png',
@@ -112,8 +108,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-
-
               Align(
                 alignment: Alignment.centerRight,
                 child: Padding(
@@ -137,9 +131,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'Login',
                 style: TextStyle(
@@ -148,18 +140,14 @@ class _LoginPageState extends State<LoginPage> {
                   color: _darkText,
                 ),
               ),
-
               const SizedBox(height: 16),
-
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 style: const TextStyle(fontSize: 16, color: _darkText),
                 decoration: _fieldDecoration('Email'),
               ),
-
               const SizedBox(height: 22),
-
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
@@ -177,9 +165,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 32),
-
               Center(
                 child: SizedBox(
                   width: 200,
@@ -214,9 +200,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 36),
-
               Center(
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -244,7 +228,6 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
             ],
           ),
