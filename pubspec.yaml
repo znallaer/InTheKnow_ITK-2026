@@ -38,6 +38,7 @@ dependencies:
   firebase_auth: ^7.0.1
   cloud_firestore: ^7.1.0
   carousel_slider: ^5.1.2
+  calendar_date_picker2: ^4.0.0
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +68,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/events/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

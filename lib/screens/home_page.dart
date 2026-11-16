@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/event_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/event_cover.dart';
 import '../widgets/itk_bottom_nav.dart';
 import 'edit_profile_page.dart';
 import 'event_details_page.dart';
@@ -205,14 +206,7 @@ class _HomePageState extends State<HomePage> {
                 child: Image.asset(
                   'assets/images/banner_puzzle.png',
                   height: 90,
-                  errorBuilder: (_, _, _) => const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Icon(
-                      Icons.extension,
-                      size: 60,
-                      color: AppColors.green,
-                    ),
-                  ),
+                  errorBuilder: (_, _, _) => const SizedBox(),
                 ),
               ),
             ),
@@ -332,17 +326,17 @@ class _EventCard extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 16, 12, 12),
         decoration: BoxDecoration(
           color: AppColors.cardGreen,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: AppColors.green, width: 2),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: AppColors.green,
-                borderRadius: BorderRadius.circular(3),
+                borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 event.category.toUpperCase(),
@@ -377,7 +371,11 @@ class _EventCard extends StatelessWidget {
               '● ${event.slotsLabel}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13, color: Colors.black),
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
             ),
           ],
         ),

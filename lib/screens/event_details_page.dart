@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../models/event.dart';
 import '../services/event_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/event_cover.dart';
+import '../widgets/itk_bottom_nav.dart';
+import 'edit_profile_page.dart';
+import 'event_registration_page.dart';
+import 'registered_events_page.dart';
 
 class EventDetailsPage extends StatefulWidget {
   final String eventId;
@@ -13,209 +19,234 @@ class EventDetailsPage extends StatefulWidget {
 }
 
 class _EventDetailsPageState extends State<EventDetailsPage> {
-  final _eventService = EventService();
-  bool _registering = false;
+  final _service = EventService();
+  late final Stream<Event?> _eventStream = _service.eventStream(widget.eventId);
+  late final Stream<bool> _registeredStream =
+  _service.isRegistered(widget.eventId);
 
-  Future<void> _handleRegister() async {
-    setState(() => _registering = true);
-    try {
-      await _eventService.registerForEvent(widget.eventId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Successfully registered!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _registering = false);
-    }
+  void _openRegistration(Event event) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => EventRegistrationPage(event: event)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.dark),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 20),
-            child: Image.asset(
-              'assets/images/itk_logo.png',
-              height: 40,
-              errorBuilder: (_, _, _) => const Text(
-                'iTK',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.dark,
+      bottomNavigationBar: ItkBottomNav(
+        currentIndex: 0,
+        onTap: (index) {
+          if (index == 0) {
+            Navigator.popUntil(context, (route) => route.isFirst);
+          } else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const RegisteredEventsPage()),
+            );
+          } else {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const EditProfilePage()),
+            );
+          }
+        },
+      ),
+      body: SafeArea(
+        child: StreamBuilder<Event?>(
+          stream: _eventStream,
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Text('Could not load event: ${snapshot.error}'),
                 ),
+              );
+            }
+            if (snapshot.connectionState == ConnectionState.waiting &&
+                !snapshot.hasData) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.green),
+              );
+            }
+            final event = snapshot.data;
+            if (event == null) {
+              return const Center(child: Text('This event no longer exists.'));
+            }
+            return _buildContent(event);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(Event event) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Back arrow + logo
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.centerLeft,
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: AppColors.green,
+                    size: 28,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                Image.asset(
+                  'assets/images/itk_logo.png',
+                  height: 56,
+                  errorBuilder: (_, _, _) => const Text(
+                    'iTK',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.dark,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.green, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 8,
+                  offset: const Offset(4, 6),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: EventCover(event: event, height: 200),
+            ),
+          ),
+          const SizedBox(height: 26),
+
+
+          Text(
+            event.title,
+            style: const TextStyle(
+              fontSize: 21,
+              fontWeight: FontWeight.w800,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            '📅 ${event.dateLabel} · ${event.timeLabel}',
+            style: const TextStyle(fontSize: 15, height: 1.5),
+          ),
+          Text(
+            '📍 ${event.location}',
+            style: const TextStyle(fontSize: 15, height: 1.5),
+          ),
+          Text(
+            '👥 ${event.registeredCount} of ${event.totalSlots} slots registered',
+            style: const TextStyle(fontSize: 15, height: 1.5),
+          ),
+          const SizedBox(height: 20),
+
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+            decoration: BoxDecoration(
+              color: AppColors.cardGreen,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.green, width: 2),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'About this event',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  event.description,
+                  textAlign: TextAlign.justify,
+                  style: const TextStyle(fontSize: 14, height: 1.45),
+                ),
+                const SizedBox(height: 14),
+                Center(child: _buildRegisterButton(event)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegisterButton(Event event) {
+    return StreamBuilder<bool>(
+      stream: _registeredStream,
+      builder: (context, snapshot) {
+        final registered = snapshot.data ?? false;
+        final full = event.isFull && !registered;
+
+        String label;
+        Color color;
+        if (registered) {
+          label = "You're registered ✓";
+          color = AppColors.green;
+        } else if (full) {
+          label = 'Fully booked';
+          color = Colors.grey;
+        } else {
+          label = 'Register for this Event';
+          color = AppColors.yellow;
+        }
+
+        final canTap = !registered && !full;
+
+        return SizedBox(
+          height: 42,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: color,
+              disabledBackgroundColor: color,
+              foregroundColor: Colors.white,
+              disabledForegroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: canTap ? () => _openRegistration(event) : null,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
               ),
             ),
           ),
-        ],
-      ),
-      body: StreamBuilder<Event?>(
-        stream: _eventService.eventStream(widget.eventId),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.green),
-            );
-          }
-
-          final event = snapshot.data!;
-
-          return StreamBuilder<bool>(
-            stream: _eventService.isRegistered(widget.eventId),
-            builder: (context, regSnap) {
-              final isRegistered = regSnap.data ?? false;
-
-              return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 190,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.green, width: 2),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: event.imageUrl.isNotEmpty
-                          ? Image.network(event.imageUrl, fit: BoxFit.cover)
-                          : Image.asset(
-                        'assets/images/banner_puzzle.png',
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => Container(
-                          color: AppColors.cardGreen,
-                          child: const Icon(
-                            Icons.school,
-                            size: 64,
-                            color: AppColors.green,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      event.title,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.dark,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_month, color: AppColors.green, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${event.dateLabel} ${event.timeLabel}',
-                          style: const TextStyle(fontSize: 14, color: AppColors.dark),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on, color: AppColors.green, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          event.location,
-                          style: const TextStyle(fontSize: 14, color: AppColors.dark),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.people_alt, color: AppColors.green, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${event.registeredCount} of ${event.totalSlots} slots registered',
-                          style: const TextStyle(fontSize: 14, color: AppColors.dark),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'About this event',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.dark,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      event.description.isNotEmpty
-                          ? event.description
-                          : 'Learn, Grow, and Connect with fellow campus peers.',
-                      style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
-                    ),
-                    const SizedBox(height: 36),
-                    Center(
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 46,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: isRegistered
-                                ? Colors.grey.shade400
-                                : AppColors.green,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: (isRegistered || event.isFull || _registering)
-                              ? null
-                              : _handleRegister,
-                          child: _registering
-                              ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                              : Text(
-                            isRegistered
-                                ? 'Already Registered'
-                                : event.isFull
-                                ? 'Fully Booked'
-                                : 'Register for this Event',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
-      ),
+        );
+      },
     );
   }
 }
