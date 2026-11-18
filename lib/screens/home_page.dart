@@ -230,13 +230,6 @@ class _HomePageState extends State<HomePage> {
               color: AppColors.dark,
             ),
           ),
-          GestureDetector(
-            onTap: () => setState(() => _category = 'All'),
-            child: const Text(
-              'View all',
-              style: TextStyle(fontSize: 14, color: AppColors.green),
-            ),
-          ),
         ],
       ),
     );

@@ -54,6 +54,38 @@ class EventService {
     return _db.collection('users').doc(uid).snapshots().map((doc) => doc.data());
   }
 
+  /// All events registered by the signed-in user, including completed ones.
+  Stream<List<Map<String, dynamic>>> registeredEvents() {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return Stream.value(const []);
+
+    return _db
+        .collection('users')
+        .doc(uid)
+        .collection('registeredEvents')
+        .orderBy('date')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              return <String, dynamic>{
+                'eventId': doc.id,
+                ...doc.data(),
+              };
+            }).toList());
+  }
+
+  /// Persists whether the user has marked a registered event as done.
+  Future<void> setRegisteredEventDone(String eventId, bool done) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) throw Exception('Please log in first.');
+
+    await _db
+        .collection('users')
+        .doc(uid)
+        .collection('registeredEvents')
+        .doc(eventId)
+        .set({'done': done}, SetOptions(merge: true));
+  }
+
   /// Registers the signed-in user for an event.
   /// A transaction reads the latest count first, so two students can never
   /// take the last slot at the same time (same idea as the stock check in
@@ -130,6 +162,7 @@ class EventService {
         'location': event.location,
         'date': Timestamp.fromDate(event.date),
         ...attendance,
+        'done': false,
         'registeredAt': FieldValue.serverTimestamp(),
       });
     });

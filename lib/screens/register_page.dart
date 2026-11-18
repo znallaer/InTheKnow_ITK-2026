@@ -17,7 +17,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _authService = AuthService();
 
   static const List<String> _roles = ['Student', 'Teacher'];
-  static const List<String> _countryCodes = ['+63'];
+  static const List<String> _countryCodes = ['+63', '+1', '+44', '+61', '+81'];
 
   String? _selectedRole;
   String _countryCode = '+63';
@@ -62,7 +62,7 @@ class _RegisterPageState extends State<RegisterPage> {
         name: name,
         role: role,
         email: email,
-        phoneNumber: phone,
+        phoneNumber: '$_countryCode$phone',
         password: password,
       );
       if (mounted) {

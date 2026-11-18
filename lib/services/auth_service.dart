@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -24,7 +26,7 @@ class AuthService {
       'name': name.trim(),
       'role': role.trim(),
       'email': email.trim(),
-      'phoneNumber': '+63${phoneNumber.trim()}',
+      'phoneNumber': phoneNumber.trim(),
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -42,4 +44,49 @@ class AuthService {
   }
 
   Future<void> logout() => _auth.signOut();
+
+  Future<void> updateProfile({
+    required String name,
+    required String role,
+    required String phoneNumber,
+    required String email,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Please log in first.');
+
+    final cleanEmail = email.trim();
+    if (cleanEmail.toLowerCase() != (user.email ?? '').toLowerCase()) {
+      try {
+        await user
+            .verifyBeforeUpdateEmail(cleanEmail)
+            .timeout(const Duration(seconds: 60));
+      } on TimeoutException {
+        throw Exception(
+          'Email update timed out. Check your connection and try again.',
+        );
+      }
+    }
+
+    try {
+      await _firestore.collection('users').doc(user.uid).set({
+        'name': name.trim(),
+        'role': role.trim(),
+        'phoneNumber': phoneNumber.trim(),
+        'email': cleanEmail,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 60));
+    } on TimeoutException {
+      throw Exception(
+        'Profile update timed out. Check your connection and try again.',
+      );
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('Please log in first.');
+
+    await _firestore.collection('users').doc(user.uid).delete();
+    await user.delete();
+  }
 }

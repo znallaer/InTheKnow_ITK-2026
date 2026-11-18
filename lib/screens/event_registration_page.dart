@@ -1,4 +1,3 @@
-import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -566,11 +565,6 @@ class _DateTimeDialogState extends State<_DateTimeDialog> {
     minute: widget.initial.minute,
   );
 
-  bool _isEventDay(DateTime day) =>
-      day.year == widget.event.date.year &&
-          day.month == widget.event.date.month &&
-          day.day == widget.event.date.day;
-
   Future<void> _pickTime() async {
     final picked = await showTimePicker(
       context: context,
@@ -611,52 +605,53 @@ class _DateTimeDialogState extends State<_DateTimeDialog> {
   @override
   Widget build(BuildContext context) {
     final eventDate = widget.event.date;
-    final firstDate = DateTime(eventDate.year, eventDate.month, 1);
-    final lastDate = DateTime(eventDate.year, eventDate.month + 1, 0);
-
     return Dialog(
       backgroundColor: AppColors.cardGreen,
       insetPadding: const EdgeInsets.symmetric(horizontal: 36, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
-            child: SizedBox(
-              height: 330,
-              child: CalendarDatePicker2(
-                config: CalendarDatePicker2Config(
-                  calendarType: CalendarDatePicker2Type.single,
-                  firstDate: firstDate,
-                  lastDate: lastDate,
-                  firstDayOfWeek: 1,
-                  disableModePicker: true,
-                  centerAlignModePicker: true,
-                  selectedDayHighlightColor: AppColors.yellow,
-                  selectedDayTextStyle: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w600,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 728),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 20, 12, 8),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  datePickerTheme: DatePickerThemeData(
+                    backgroundColor: AppColors.cardGreen,
+                    headerBackgroundColor: AppColors.cardGreen,
+                    headerForegroundColor: Colors.black,
+                    headerHeadlineStyle: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    weekdayStyle: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 17,
+                    ),
+                    dayForegroundColor:
+                        const WidgetStatePropertyAll(Colors.black),
+                    dayBackgroundColor: WidgetStateProperty.resolveWith(
+                      (states) => states.contains(WidgetState.selected)
+                          ? AppColors.yellow
+                          : Colors.transparent,
+                    ),
+                    todayForegroundColor:
+                        const WidgetStatePropertyAll(AppColors.green),
+                    todayBackgroundColor:
+                        const WidgetStatePropertyAll(Colors.transparent),
                   ),
-                  dayTextStyle: const TextStyle(color: Colors.black),
-                  controlsTextStyle: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-
-                  selectableDayPredicate: _isEventDay,
                 ),
-                value: [_date],
-                onValueChanged: (dates) {
-                  final first = dates.isEmpty ? null : dates.first;
-                  if (first != null) {
-                    setState(() => _date = first);
-                  }
-                },
+                child: CalendarDatePicker(
+                  initialDate: _date,
+                  firstDate: DateTime(eventDate.year - 1, eventDate.month),
+                  lastDate: DateTime(eventDate.year + 1, eventDate.month + 1, 0),
+                  currentDate: DateTime.now(),
+                  onDateChanged: (date) => setState(() => _date = date),
+                ),
               ),
             ),
-          ),
           const Divider(height: 1, color: Colors.black87),
           InkWell(
             onTap: _pickTime,
@@ -713,7 +708,8 @@ class _DateTimeDialogState extends State<_DateTimeDialog> {
               ],
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
