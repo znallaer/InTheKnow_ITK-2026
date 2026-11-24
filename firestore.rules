@@ -6,8 +6,7 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
 
       match /registeredEvents/{eventId} {
-        allow read, create, update: if isOwner(userId);
-        allow delete: if false;
+        allow read, create, update, delete: if isOwner(userId);
       }
     }
 
@@ -17,8 +16,8 @@ service cloud.firestore {
 
       match /registrations/{userId} {
         allow read: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update, delete: if false;
+        allow create, delete: if isOwner(userId);
+        allow update: if false;
       }
     }
 

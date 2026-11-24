@@ -8,8 +8,7 @@ class EventService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// All fixed events (soonest first) with a live registered count from
-  /// Firestore. Events nobody has registered for yet simply count as 0.
+
   Stream<List<Event>> upcomingEvents() {
     return _db.collection('events').snapshots().map((snap) {
       final counts = <String, int>{
@@ -24,7 +23,7 @@ class EventService {
     });
   }
 
-  /// One event with its live count (so slots update instantly on screen).
+
   Stream<Event?> eventStream(String eventId) {
     final base = findEvent(eventId);
     if (base == null) return Stream.value(null);
@@ -34,7 +33,7 @@ class EventService {
     });
   }
 
-  /// True when the signed-in user already registered for this event.
+
   Stream<bool> isRegistered(String eventId) {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return Stream.value(false);
@@ -47,14 +46,14 @@ class EventService {
         .map((doc) => doc.exists);
   }
 
-  /// Live profile of the signed-in user (users/{uid}).
+
   Stream<Map<String, dynamic>?> userProfile() {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return Stream.value(null);
     return _db.collection('users').doc(uid).snapshots().map((doc) => doc.data());
   }
 
-  /// All events registered by the signed-in user, including completed ones.
+
   Stream<List<Map<String, dynamic>>> registeredEvents() {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return Stream.value(const []);
@@ -73,7 +72,7 @@ class EventService {
             }).toList());
   }
 
-  /// Persists whether the user has marked a registered event as done.
+
   Future<void> setRegisteredEventDone(String eventId, bool done) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw Exception('Please log in first.');
@@ -86,12 +85,41 @@ class EventService {
         .set({'done': done}, SetOptions(merge: true));
   }
 
-  /// Registers the signed-in user for an event.
-  /// A transaction reads the latest count first, so two students can never
-  /// take the last slot at the same time (same idea as the stock check in
-  /// the classroom guide).
-  ///
-  /// The optional values come from the 3-step registration form.
+  Future<void> removeRegisteredEvent(String eventId) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+
+    final eventRef = _db.collection('events').doc(eventId);
+    final regRef = eventRef.collection('registrations').doc(uid);
+    final userRegRef = _db
+        .collection('users')
+        .doc(uid)
+        .collection('registeredEvents')
+        .doc(eventId);
+
+    try {
+      await _db.runTransaction((tx) async {
+        final eventSnap = await tx.get(eventRef);
+        if (eventSnap.exists) {
+          final count = (eventSnap.data()?['registeredCount'] as num?)?.toInt() ?? 0;
+          if (count > 0) {
+            tx.update(eventRef, {'registeredCount': count - 1});
+          }
+        }
+        tx.delete(regRef);
+        tx.delete(userRegRef);
+      });
+    } catch (_) {
+      try {
+        await userRegRef.delete();
+      } catch (_) {}
+      try {
+        await regRef.delete();
+      } catch (_) {}
+    }
+  }
+
+
   Future<void> registerForEvent(
       String eventId, {
         String? name,

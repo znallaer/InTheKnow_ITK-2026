@@ -88,7 +88,6 @@ class _EventDetailsPageState extends State<EventDetailsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Back arrow + logo
           Padding(
             padding: const EdgeInsets.only(top: 16),
             child: Row(

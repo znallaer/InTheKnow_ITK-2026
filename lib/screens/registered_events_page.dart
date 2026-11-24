@@ -43,6 +43,24 @@ class _RegisteredEventsPageState extends State<RegisteredEventsPage> {
     }
   }
 
+  Future<void> _deleteCompleted(String eventId) async {
+    if (eventId.isEmpty) return;
+    try {
+      await _service.removeRegisteredEvent(eventId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Completed event removed.')),
+        );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not remove event: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,26 +97,26 @@ class _RegisteredEventsPageState extends State<RegisteredEventsPage> {
             _buildHeader(),
             Expanded(
               child: StreamBuilder<List<Map<String, dynamic>>>(
-                stream: _eventsStream,
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(32),
-                        child: Text(
-                          'Could not load registered events: ${snapshot.error}',
-                          textAlign: TextAlign.center,
-                        ),
+              stream: _eventsStream,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Text(
+                        'Could not load registered events: ${snapshot.error}',
+                        textAlign: TextAlign.center,
                       ),
-                    );
-                  }
-                  if (!snapshot.hasData) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: AppColors.green),
-                    );
-                  }
-                  return _buildEventList(snapshot.data!);
-                },
+                    ),
+                  );
+                }
+                if (!snapshot.hasData) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppColors.green),
+                  );
+                }
+                return _buildEventList(snapshot.data!);
+              },
               ),
             ),
           ],
@@ -136,98 +154,131 @@ class _RegisteredEventsPageState extends State<RegisteredEventsPage> {
   }
 
   Widget _buildEventList(List<Map<String, dynamic>> registrations) {
-    if (registrations.isEmpty) {
-      return const Center(
-        child: Text(
-          'You have not registered for any events yet.',
-          style: TextStyle(fontSize: 16, color: Colors.black54),
-        ),
-      );
-    }
+  if (registrations.isEmpty) {
+  return const Center(
+  child: Text(
+  'You have not registered for any events yet.',
+  style: TextStyle(fontSize: 16, color: Colors.black54),
+  ),
+  );
+  }
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(40, 76, 40, 28),
-      children: [
-        const Text(
-          'My Registered Events',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-            color: AppColors.dark,
-          ),
-        ),
-        const SizedBox(height: 64),
-        ...registrations.map(_buildEventCard),
-      ],
-    );
+  final active = registrations.where((r) => r['done'] != true).toList();
+  final completed = registrations.where((r) => r['done'] == true).toList();
+
+  return ListView(
+  padding: const EdgeInsets.fromLTRB(40, 76, 40, 28),
+  children: [
+  const Text(
+  'My Registered Events',
+  style: TextStyle(
+  fontSize: 28,
+  fontWeight: FontWeight.w800,
+  color: AppColors.dark,
+  ),
+  ),
+  const SizedBox(height: 36),
+  if (active.isEmpty)
+  const Padding(
+  padding: EdgeInsets.only(bottom: 32),
+  child: Text(
+  'No pending registered events.',
+  style: TextStyle(fontSize: 15, color: Colors.black54),
+  ),
+  )
+  else
+  ...active.map(_buildEventCard),
+  if (completed.isNotEmpty) ...[
+  const SizedBox(height: 16),
+  const Text(
+  'Completed',
+  style: TextStyle(
+  fontSize: 24,
+  fontWeight: FontWeight.w800,
+  color: AppColors.green,
+  ),
+  ),
+
+  const SizedBox(height: 24),
+  ...completed.map(_buildEventCard),
+  ],
+  ],
+  );
   }
 
   Widget _buildEventCard(Map<String, dynamic> registration) {
-    final eventId = registration['eventId']?.toString() ?? '';
-    final title = registration['title']?.toString() ?? 'Registered event';
-    final location = registration['location']?.toString() ?? 'TBA';
-    final date = _registeredDate(registration['date']);
-    final done = registration['done'] == true;
-    final textColor = done ? AppColors.green : AppColors.dark;
+  final eventId = registration['eventId']?.toString() ?? '';
+  final title = registration['title']?.toString() ?? 'Registered event';
+  final location = registration['location']?.toString() ?? 'TBA';
+  final date = _registeredDate(registration['date']);
+  final done = registration['done'] == true;
+  final textColor = done ? AppColors.green : AppColors.dark;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 48),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.green, width: 2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x44000000),
-            blurRadius: 12,
-            offset: Offset(4, 8),
-          ),
-        ],
-      ),
-      child: CheckboxListTile(
-        value: done,
-        onChanged: eventId.isEmpty
-            ? null
-            : (value) => _setDone(eventId, value ?? false),
-        controlAffinity: ListTileControlAffinity.trailing,
-        checkboxScaleFactor: 1.45,
-        contentPadding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-        activeColor: AppColors.green,
-        checkColor: Colors.white,
-        side: const BorderSide(color: AppColors.green, width: 3),
-        checkboxShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: textColor,
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        subtitle: Text(
-          '$date · $location',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: textColor, fontSize: 16),
-        ),
-      ),
-    );
+  final card = Container(
+  margin: const EdgeInsets.only(bottom: 28),
+  decoration: BoxDecoration(
+  color: Colors.white,
+  borderRadius: BorderRadius.circular(18),
+  border: Border.all(color: AppColors.green, width: 2),
+  boxShadow: const [
+  BoxShadow(
+  color: Color(0x44000000),
+  blurRadius: 12,
+  offset: Offset(4, 8),
+  ),
+  ],
+  ),
+  child: CheckboxListTile(
+  value: done,
+  onChanged: eventId.isEmpty
+  ? null
+      : (value) => _setDone(eventId, value ?? false),
+  controlAffinity: ListTileControlAffinity.trailing,
+  checkboxScaleFactor: 1.45,
+  contentPadding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+  activeColor: AppColors.green,
+  checkColor: Colors.white,
+  side: const BorderSide(color: AppColors.green, width: 3),
+  checkboxShape: RoundedRectangleBorder(
+  borderRadius: BorderRadius.circular(20),
+  ),
+  title: Text(
+  title,
+  maxLines: 1,
+  overflow: TextOverflow.ellipsis,
+  style: TextStyle(
+  color: textColor,
+  fontSize: 20,
+  fontWeight: FontWeight.w800,
+  ),
+  ),
+  subtitle: Text(
+  '$date · $location',
+  maxLines: 1,
+  overflow: TextOverflow.ellipsis,
+  style: TextStyle(color: textColor, fontSize: 16),
+  ),
+  ),
+  );
+
+  if (!done) return card;
+
+  return GestureDetector(
+  onDoubleTap: () => _deleteCompleted(eventId),
+  child: card,
+  );
   }
 
   String _registeredDate(dynamic value) {
-    DateTime? date;
-    if (value is Timestamp) date = value.toDate();
-    if (value is DateTime) date = value;
-    if (date == null) return 'Date TBA';
+  DateTime? date;
+  if (value is Timestamp) date = value.toDate();
+  if (value is DateTime) date = value;
+  if (date == null) return 'Date TBA';
 
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
-    ];
-    return '${months[date.month - 1]} ${date.day}';
+  const months = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+  return '${months[date.month - 1]} ${date.day}';
   }
 }
