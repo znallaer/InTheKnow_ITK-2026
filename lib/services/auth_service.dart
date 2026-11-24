@@ -86,7 +86,19 @@ class AuthService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Please log in first.');
 
-    await _firestore.collection('users').doc(user.uid).delete();
+    final uid = user.uid;
+    try {
+      final regSnap = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('registeredEvents')
+          .get();
+      for (final doc in regSnap.docs) {
+        await doc.reference.delete();
+      }
+    } catch (_) {}
+
+    await _firestore.collection('users').doc(uid).delete();
     await user.delete();
   }
 }
